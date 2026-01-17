@@ -657,6 +657,70 @@ Based on the setup and usage steps described above, assuming the local and cloud
 
 12. Test RAG server: `poetry poe call-inference-ml-service`
 
-## 📄 License
+## 🛠️ Debugging & Setup Log
+
+This section documents the steps taken to resolve initial environment and connectivity issues.
+
+### 1. Fixed `poe` Command Not Found
+- **Issue**: `poe` command was not recognized in the shell.
+- **Solution**: `poe` is a project dependency. It must be run via Poetry:
+  ```bash
+  poetry run poe <task_name>
+  ```
+
+### 2. Resolved SSL Certificate Verification Error
+- **Issue**: `urllib` and `chromedriver` failed with `SSL:CERTIFICATE_VERIFY_FAILED`.
+- **Solution**: Modified `tools/run.py` to use `certifi`'s CA bundle.
+  ```python
+  # Added to tools/run.py
+  import os
+  import certifi
+  os.environ["SSL_CERT_FILE"] = certifi.where()
+  ```
+
+### 3. Fixed MongoDB Connection Refused
+- **Issue**: ETL pipeline failed to connect to MongoDB (`Connection refused`).
+- **cause**: Local Docker infrastructure was not running.
+- **Solution**: Started the infrastructure using the provided `poe` task:
+  ```bash
+  poetry run poe local-docker-infrastructure-up
+  ```
+  This started both **MongoDB** (port 27017) and **Qdrant** (port 6333).
+
+### 4. Verified ETL Pipeline
+- **Action**: Ran the digital data ETL pipeline to confirm connectivity.
+  ```bash
+  poetry run poe run-digital-data-etl-maxime
+  ```
+- **Result**: Successfully connected to MongoDB and began processing.
+
+### 5. Setup ZenML Server
+- **Issue**: `zenml up` failed on macOS due to forking safety restrictions.
+- **Solution**: Ran with the required environment variable and enabled blocking mode (for creating a persistent local server):
+  ```bash
+  OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES poetry run zenml login --local --blocking
+  ```
+- **URL**: [http://127.0.0.1:8237](http://127.0.0.1:8237)
+- **Credentials**: `admin` / `zenml`
+
+### 6. Added Mongo Express UI
+- **Action**: User requested a UI for MongoDB.
+- **Solution**:
+    1.  Updated `docker-compose.yml` to include `mongo-express`.
+    2.  Started the container:
+        ```bash
+        docker compose up -d
+        ```
+- **URL**: [http://localhost:8081](http://localhost:8081)
+
+## �️ Local Dashboards & Credentials (Quick Reference)
+
+| Service | Dashboard URL | Username | Password | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **ZenML** | [http://127.0.0.1:8237](http://127.0.0.1:8237) | `admin` | `zenml` | Pipeline Orchestrator |
+| **Mongo Express** | [http://localhost:8081](http://localhost:8081) | `llm_engineering` | `llm_engineering` | MongoDB GUI (Admin/Pass from config) |
+| **Qdrant** | [http://localhost:6333/dashboard](http://localhost:6333/dashboard) | N/A | N/A | Vector DB Dashboard |
+
+## �📄 License
 
 This course is an open-source project released under the MIT license. Thus, as long you distribute our LICENSE and acknowledge our work, you can safely clone or fork this project and use it as a source of inspiration for whatever you want (e.g., university projects, college degree projects, personal projects, etc.).

@@ -1,8 +1,13 @@
+import os
 from datetime import datetime as dt
 from pathlib import Path
 
+import certifi
 import click
 from loguru import logger
+
+# Fix for SSL certificate verification issue on macOS
+os.environ["SSL_CERT_FILE"] = certifi.where()
 
 from llm_engineering import settings
 from pipelines import (
@@ -14,6 +19,8 @@ from pipelines import (
     generate_datasets,
     training,
 )
+
+
 
 
 @click.command(
